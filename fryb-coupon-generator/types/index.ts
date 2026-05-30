@@ -9,8 +9,7 @@ export type Employee = {
 export type CouponSettings = {
   month: number;
   year: number;
-  tier1_copies: number;
-  tier2_copies: number;
+  coupon_value: number;
 };
 
 export type Coupon = {
@@ -19,6 +18,7 @@ export type Coupon = {
   employee_name: string;
   employee_code: string;
   coupon_code: string;
+  coupon_date: string;
   coupon_value: number;
   copy_number: number;
   month: number;

@@ -10,8 +10,10 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const getLastDayOfMonth = (year: number, month: number) => {
-  return new Date(year, month, 0).getDate();
+const formatCouponDate = (day: number, monthIndex: number, year: number) => {
+  const dayStr = day.toString().padStart(2, '0');
+  const monthAbbr = MONTHS[monthIndex - 1].substring(0, 3);
+  return `${dayStr} ${monthAbbr} ${year}`;
 };
 
 export default function CouponPreview({ groups }: Props) {
@@ -33,103 +35,96 @@ export default function CouponPreview({ groups }: Props) {
     <div className="space-y-6 print:space-y-0">
       <div className="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-5 rounded-lg border border-gray-200 shadow-inner no-print">
         <span className="font-medium text-gray-700 text-lg">
-          <span className="text-green-600 font-bold">{totalCoupons}</span> coupons ready across <span className="text-green-600 font-bold">{groups.length * 2}</span> sheets
+          <span className="text-green-600 font-bold">{totalCoupons}</span> coupons ready across <span className="text-green-600 font-bold">{groups.length}</span> pages
         </span>
-        <button
-          onClick={handlePrint}
-          className="mt-4 sm:mt-0 bg-gray-900 text-white font-medium py-2.5 px-6 rounded-md hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 text-sm transition-all shadow-md flex items-center gap-2 hover:shadow-lg transform hover:-translate-y-0.5"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-          Print / Save as PDF
-        </button>
+        <div className="flex flex-col sm:flex-row items-center gap-4 mt-4 sm:mt-0">
+          <div className="text-xs text-gray-500 max-w-[200px] text-right">
+            Tip: In the print dialog, set <strong className="font-semibold">Margins to None</strong> and uncheck <strong className="font-semibold">Headers and Footers</strong> for the cleanest output.
+          </div>
+          <button
+            onClick={handlePrint}
+            className="bg-gray-900 text-white font-medium py-2.5 px-6 rounded-md hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 text-sm transition-all shadow-md flex items-center gap-2 hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            Print / Save as PDF
+          </button>
+        </div>
       </div>
 
-      <div className="print:block flex flex-col space-y-12 print:space-y-0 print:bg-white">
+      <div className="sheets-wrapper flex flex-col space-y-12">
         {groups.map((group) => {
           const firstCoupon = group.coupons[0];
           const monthName = firstCoupon ? MONTHS[firstCoupon.month - 1] : '';
           const year = firstCoupon ? firstCoupon.year : new Date().getFullYear();
-          const lastDay = firstCoupon ? getLastDayOfMonth(year, firstCoupon.month) : 30;
           
-          const getOrdinal = (n: number) => {
-            const s = ["th", "st", "nd", "rd"];
-            const v = n % 100;
-            return n + (s[(v - 20) % 10] || s[v] || s[0]);
-          };
+          const title = `${group.employee.name} — ${monthName} ${year}`;
+          const sheetCoupons = [...group.coupons];
+          while (sheetCoupons.length < 30) {
+            sheetCoupons.push(null as any);
+          }
 
-          const sheetsData = [
-            { id: `${group.employee.id}-1`, title: `1st – 15th ${monthName} ${year}` },
-            { id: `${group.employee.id}-2`, title: `16th – ${getOrdinal(lastDay)} ${monthName} ${year}` }
-          ];
-
-          return sheetsData.map((sheet) => {
-             // to guarantee at least 28 cells, pad coupons with nulls
-             const cells = [...group.coupons];
-             while (cells.length < 28) {
-               cells.push(null as any);
-             }
-             const finalCells = cells.slice(0, 28);
-
-             return (
+          return (
+             <div key={group.employee.id} className="w-full overflow-x-auto pb-8 print:pb-0 print:overflow-visible flex flex-col items-center print:block">
+               <div className="sheet-label text-center text-[#888] text-[13px] font-medium mb-[6px] w-full no-print">{title}</div>
+               
                <div 
-                 key={sheet.id}
-                 className="sheet-container print:break-after-always bg-white shadow-xl mx-auto w-full max-w-[210mm] min-h-[297mm] p-[8mm] print:shadow-none print:w-full print:h-full print:min-h-0 print:p-0 flex flex-col box-border"
+                 className="coupon-sheet bg-white shadow-[0_2px_12px_rgba(0,0,0,0.12)] rounded-[4px] mx-auto w-[794px] min-w-[794px] h-[1123px] min-h-[1123px] max-h-[1123px] grid grid-cols-5 grid-rows-6 box-border print:shadow-none print:rounded-none print:mb-0 mb-[32px] border-t border-l border-[#999] print:border-[#ccc]"
                >
-                 <div className="text-center font-bold text-gray-500 text-sm no-print mb-2">{sheet.title} - {group.employee.name}</div>
-                 
-                 {/* The actual grid area for printing */}
-                 <div className="grid grid-cols-4 grid-rows-7 h-full flex-grow gap-0 box-border print:w-full print:h-[281mm]">
-                   {finalCells.map((coupon, index) => {
-                     if (!coupon) {
-                       return (
-                         <div key={`empty-${index}`} className="border-[0.5px] border-black border-dashed flex-1 box-border" />
-                       );
-                     }
-                     
-                     return (
-                        <div 
-                          key={`${coupon.id}-${index}`} 
-                          className="border border-black p-1 flex flex-col break-inside-avoid overflow-hidden relative box-border bg-white"
-                        >
-                          {/* Title */}
-                          <div className="text-center border-b border-black pb-[1px] mb-1 flex-shrink-0 mx-2">
-                            <div className="font-bold text-[10px] tracking-widest uppercase text-black leading-tight">Food Coupon</div>
-                          </div>
-                          
-                          <div className="flex flex-row items-center h-full px-1">
-                            {/* Left side: Logo */}
-                            <div className="flex-shrink-0 w-[70px] h-[70px] flex items-center justify-center">
-                              <img 
-                                src="/fryb-logo.png" 
-                                alt="FryB Logo" 
-                                className="w-full h-full object-contain" 
-                                onError={(e) => { e.currentTarget.style.display = 'none'; }} 
-                              />
-                            </div>
+                 {sheetCoupons.map((coupon, index) => {
+                    if (!coupon) {
+                      return (
+                        <div key={`empty-${index}`} className="coupon-card coupon-card--empty border-r border-b border-[#ccc]" />
+                      );
+                    }
 
-                            {/* Right side: Details */}
-                            <div className="flex-grow pl-2 space-y-0.5 text-[9px] leading-tight text-black min-w-0">
-                              <div className="flex flex-row">
-                                <span className="font-semibold w-9 flex-shrink-0">Name:</span>
-                                <span className="font-bold truncate">{coupon.employee_name}</span>
-                              </div>
-                              <div className="flex flex-row">
-                                <span className="font-semibold w-9 flex-shrink-0">Code:</span>
-                                <span className="font-bold tracking-tight truncate">{coupon.coupon_code}</span>
-                              </div>
-                              <div className="flex flex-row">
-                                <span className="font-semibold w-9 flex-shrink-0">Value:</span>
-                                <span className="font-bold truncate">{coupon.coupon_value} SAR</span>
-                              </div>
-                            </div>
+                    const dateFormatted = formatCouponDate(coupon.copy_number, coupon.month, coupon.year);
+                    
+                    return (
+                    <div 
+                      key={`${coupon.id}-${index}`} 
+                      className="coupon-card border-r border-b border-[#ccc] flex flex-col break-inside-avoid box-border bg-white"
+                    >
+                      {/* Title */}
+                      <div className="bg-[#111] text-white text-center font-bold text-[6.5pt] tracking-[0.5px] py-[3px] uppercase flex-shrink-0">
+                        FOOD COUPON
+                      </div>
+                      
+                      <div className="flex flex-row items-center flex-grow p-[4px_5px] gap-[5px] h-full min-h-0">
+                        {/* Left side: Logo */}
+                        <div className="flex-shrink-0 w-[48px] h-[48px] flex items-center justify-center">
+                          <img 
+                            src="/fryb-logo.png" 
+                            alt="FryB Logo" 
+                            className="w-full h-full object-contain" 
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                          />
+                        </div>
+
+                        {/* Right side: Details */}
+                        <div className="flex-grow flex flex-col justify-center leading-[1.4] text-black min-w-0">
+                          <div className="flex flex-row gap-[3px]">
+                            <span className="font-semibold text-[6pt] text-[#555]">Name:</span>
+                            <span className="font-normal text-[6pt] text-[#000]">{coupon.employee_name}</span>
+                          </div>
+                          <div className="flex flex-row gap-[3px]">
+                            <span className="font-semibold text-[6pt] text-[#555]">Code:</span>
+                            <span className="font-normal text-[5.5pt] text-[#000]">{coupon.coupon_code}</span>
+                          </div>
+                          <div className="flex flex-row gap-[3px]">
+                            <span className="font-semibold text-[6pt] text-[#555]">Value:</span>
+                            <span className="font-normal text-[6pt] text-[#000]">{coupon.coupon_value} SAR</span>
+                          </div>
+                          <div className="flex flex-row gap-[3px]">
+                            <span className="font-semibold text-[6pt] text-[#555]">Date:</span>
+                            <span className="font-normal text-[6pt] text-[#000]">{dateFormatted}</span>
                           </div>
                         </div>
-                     );
-                   })}
-                 </div>
+                      </div>
+                    </div>
+                 )})}
                </div>
-             );
-          });
+             </div>
+          );
         })}
       </div>
     </div>

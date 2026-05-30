@@ -5,6 +5,11 @@ const MONTH_ABBR = [
   'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
 ];
 
+const MONTH_FULL = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
 export const generateCoupons = (
   employees: Employee[],
   settings: CouponSettings
@@ -12,50 +17,48 @@ export const generateCoupons = (
   const groups: EmployeeSheetGroup[] = [];
 
   const monthAbbr = MONTH_ABBR[settings.month - 1];
+  const monthFull = MONTH_FULL[settings.month - 1];
   const year2 = settings.year.toString().slice(-2);
   
+  // Build unique initials map
+  const initialsCount: Record<string, number> = {};
+  const employeeInitialsMap = new Map<string, string>();
+  
   for (const emp of employees) {
-    let localCounter = 1;
-    const coupons: Coupon[] = [];
-
-    // Generate Tier 1 (5 SAR)
-    if (settings.tier1_copies > 0) {
-      for (let i = 0; i < settings.tier1_copies; i++) {
-        const coupon_code = `${monthAbbr}${year2}-T${localCounter}`;
-        localCounter++;
-        
-        coupons.push({
-          id: crypto.randomUUID(),
-          employee_id: emp.id,
-          employee_name: emp.name,
-          employee_code: emp.employee_code,
-          coupon_code,
-          coupon_value: 5,
-          copy_number: i + 1,
-          month: settings.month,
-          year: settings.year
-        });
-      }
+    const rawInitials = emp.name.replace(/[^a-zA-Z]/g, '').substring(0, 3).toUpperCase();
+    const baseInitials = rawInitials || 'EMP';
+    
+    if (!initialsCount[baseInitials]) {
+      initialsCount[baseInitials] = 1;
+      employeeInitialsMap.set(emp.id, baseInitials);
+    } else {
+      initialsCount[baseInitials]++;
+      employeeInitialsMap.set(emp.id, `${baseInitials}${initialsCount[baseInitials]}`);
     }
+  }
 
-    // Generate Tier 2 (3 SAR)
-    if (settings.tier2_copies > 0) {
-      for (let i = 0; i < settings.tier2_copies; i++) {
-        const coupon_code = `${monthAbbr}${year2}-T${localCounter}`;
-        localCounter++;
-        
-        coupons.push({
-          id: crypto.randomUUID(),
-          employee_id: emp.id,
-          employee_name: emp.name,
-          employee_code: emp.employee_code,
-          coupon_code,
-          coupon_value: 3,
-          copy_number: i + 1,
-          month: settings.month,
-          year: settings.year
-        });
-      }
+  for (const emp of employees) {
+    const coupons: Coupon[] = [];
+    const empInitials = employeeInitialsMap.get(emp.id);
+
+    // Generate exactly 30 coupons per employee
+    for (let day = 1; day <= 30; day++) {
+      const dayStr = day.toString().padStart(2, '0');
+      const coupon_code = `${monthAbbr}${year2}-${empInitials}-${dayStr}`;
+      const coupon_date = `${dayStr} ${monthFull} ${settings.year}`;
+      
+      coupons.push({
+        id: crypto.randomUUID(),
+        employee_id: emp.id,
+        employee_name: emp.name,
+        employee_code: emp.employee_code,
+        coupon_code,
+        coupon_date,
+        coupon_value: settings.coupon_value,
+        copy_number: day,
+        month: settings.month,
+        year: settings.year
+      });
     }
     
     groups.push({

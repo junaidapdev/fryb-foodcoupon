@@ -52,16 +52,16 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b shadow-sm z-50 flex items-center justify-between px-6 no-print">
-      <div className="font-bold text-xl text-gray-800 flex items-center gap-4">
-        FRYB Food Coupon Generator
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b shadow-sm z-50 flex items-center justify-between px-4 sm:px-6 overflow-x-auto no-print whitespace-nowrap">
+      <div className="font-bold text-base sm:text-xl text-gray-800 flex items-center gap-4 flex-shrink-0">
+        FRYB Food Coupon
         {message && (
-          <span className="text-sm font-medium text-blue-700 bg-blue-50 px-3 py-1 rounded-full animate-fade-in-down">
+          <span className="text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 px-2 sm:px-3 py-1 rounded-full animate-fade-in-down">
             {message}
           </span>
         )}
       </div>
-      <div className="flex gap-4">
+      <div className="flex gap-2 sm:gap-4 flex-shrink-0 ml-4">
         <input
           type="file"
           accept=".csv,text/csv,application/vnd.ms-excel,text/plain"
@@ -72,19 +72,19 @@ export default function Header() {
         />
         <button
           onClick={handleImportClick}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+          className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
         >
           Import CSV
         </button>
         <button
           onClick={handleExport}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+          className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
         >
           Export CSV
         </button>
         <button
           onClick={handleClearData}
-          className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
+          className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
         >
           Clear Data
         </button>

@@ -15,12 +15,58 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm;
+    margin: 6mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .sheets-wrapper {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .sheets-wrapper * {
+    box-sizing: border-box;
+  }
+
+  .coupon-sheet {
+    width: 198mm !important;
+    height: 285mm !important;
+    min-height: 285mm !important;
+    max-height: 285mm !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    page-break-before: auto !important;
+    page-break-inside: avoid !important;
+    break-after: page !important;
+    break-inside: avoid !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-rows: repeat(6, 1fr) !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .coupon-card {
+    overflow: hidden;
+    box-sizing: border-box;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .coupon-card--empty {
+    background: white;
+  }
+
+  .sheet-label {
+    display: none !important;
   }
 
   body {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
     background-color: white;
   }
 

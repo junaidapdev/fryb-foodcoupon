@@ -29,14 +29,12 @@ export default function CouponSettingsSection({ onCouponsGenerated }: Props) {
   
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
   const [year, setYear] = useState(currentDate.getFullYear());
-  const [tier1Copies, setTier1Copies] = useState(11);
-  const [tier2Copies, setTier2Copies] = useState(15);
+  const [couponValue, setCouponValue] = useState(5);
   
   const [error, setError] = useState('');
   const [summary, setSummary] = useState<{ 
     employees: number; 
-    tier1Total: number; 
-    tier2Total: number; 
+    totalCoupons: number; 
     totalSheets: number; 
   } | null>(null);
 
@@ -45,8 +43,9 @@ export default function CouponSettingsSection({ onCouponsGenerated }: Props) {
     if (savedSettings) {
       setMonth(savedSettings.month);
       setYear(savedSettings.year);
-      setTier1Copies(savedSettings.tier1_copies);
-      setTier2Copies(savedSettings.tier2_copies);
+      if (savedSettings.coupon_value !== undefined) {
+        setCouponValue(savedSettings.coupon_value);
+      }
     }
     
     const handleUpdate = () => {
@@ -54,8 +53,7 @@ export default function CouponSettingsSection({ onCouponsGenerated }: Props) {
       if (!s) {
         setMonth(new Date().getMonth() + 1);
         setYear(new Date().getFullYear());
-        setTier1Copies(11);
-        setTier2Copies(15);
+        setCouponValue(5);
         setSummary(null);
         onCouponsGenerated([]);
       }
@@ -67,16 +65,11 @@ export default function CouponSettingsSection({ onCouponsGenerated }: Props) {
   const handleGenerate = () => {
     setError('');
     
-    if (tier1Copies < 0 || tier2Copies < 0) {
-      setError('Copies per employee cannot be negative.');
+    if (couponValue <= 0) {
+      setError('Coupon value must be greater than 0.');
       return;
     }
 
-    if (tier1Copies === 0 && tier2Copies === 0) {
-      setError('You must generate at least 1 coupon per employee in total.');
-      return;
-    }
-    
     const employees = getEmployees();
     
     if (employees.length === 0) {
@@ -89,8 +82,7 @@ export default function CouponSettingsSection({ onCouponsGenerated }: Props) {
     const settings: CouponSettings = {
       month,
       year,
-      tier1_copies: tier1Copies,
-      tier2_copies: tier2Copies
+      coupon_value: couponValue
     };
     
     setCouponSettings(settings);
@@ -100,9 +92,8 @@ export default function CouponSettingsSection({ onCouponsGenerated }: Props) {
     
     setSummary({
       employees: employees.length,
-      tier1Total: tier1Copies,
-      tier2Total: tier2Copies,
-      totalSheets: employees.length * 2
+      totalCoupons: employees.length * 30,
+      totalSheets: employees.length
     });
   };
 
@@ -136,31 +127,20 @@ export default function CouponSettingsSection({ onCouponsGenerated }: Props) {
         </div>
 
         <div className="flex flex-col space-y-1">
-          <label className="text-sm font-medium text-gray-700">5 SAR Coupons per employee</label>
+          <label className="text-sm font-medium text-gray-700">Value per coupon (SAR)</label>
           <input
             type="number"
-            value={tier1Copies}
-            onChange={(e) => setTier1Copies(Number(e.target.value))}
+            value={couponValue}
+            onChange={(e) => setCouponValue(Number(e.target.value))}
             className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
-            min={0}
+            min={1}
           />
         </div>
 
-        <div className="flex flex-col space-y-1">
-          <label className="text-sm font-medium text-gray-700">3 SAR Coupons per employee</label>
-          <input
-            type="number"
-            value={tier2Copies}
-            onChange={(e) => setTier2Copies(Number(e.target.value))}
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white shadow-sm"
-            min={0}
-          />
-        </div>
-
-        <div className="md:col-span-4 mt-2">
+        <div className="md:col-span-1 mt-2">
           <button
             onClick={handleGenerate}
-            className="w-full sm:w-auto bg-green-600 text-white font-medium py-2.5 px-6 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm transition-colors shadow-sm"
+            className="w-full bg-green-600 text-white font-medium py-2.5 px-6 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm transition-colors shadow-sm"
           >
             Generate Coupons
           </button>
@@ -182,15 +162,15 @@ export default function CouponSettingsSection({ onCouponsGenerated }: Props) {
               <span className="font-bold text-lg">{summary.employees}</span>
             </li>
             <li className="flex flex-col">
-              <span className="text-blue-700/80 text-xs uppercase tracking-wider">5 SAR Coupons / Emp</span>
-              <span className="font-bold text-lg">{summary.tier1Total}</span>
+              <span className="text-blue-700/80 text-xs uppercase tracking-wider">Coupons / Emp</span>
+              <span className="font-bold text-lg">30</span>
             </li>
             <li className="flex flex-col">
-              <span className="text-blue-700/80 text-xs uppercase tracking-wider">3 SAR Coupons / Emp</span>
-              <span className="font-bold text-lg">{summary.tier2Total}</span>
+              <span className="text-blue-700/80 text-xs uppercase tracking-wider">Total Coupons</span>
+              <span className="font-bold text-lg">{summary.totalCoupons}</span>
             </li>
             <li className="flex flex-col">
-              <span className="text-blue-700/80 text-xs uppercase tracking-wider">Total Sheets (A4)</span>
+              <span className="text-blue-700/80 text-xs uppercase tracking-wider">Total A4 Pages</span>
               <span className="font-bold text-lg">{summary.totalSheets}</span>
             </li>
           </ul>
